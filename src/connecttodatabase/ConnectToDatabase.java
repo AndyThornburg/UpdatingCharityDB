@@ -26,11 +26,18 @@ public class ConnectToDatabase {
     public static void main(String[] args) 
     {
         ConnectToDatabase instance = new ConnectToDatabase();
+        instance.PresentMenu();
+    }
+    
+    public void PresentMenu()
+    {
         System.out.println("Welcome to the donor database editor. Please type an option number below, followed by the Enter key.");
         System.out.println(" 1 - ADD DONOR");
         System.out.println(" 2 - ADD COMPANY");
         System.out.println(" 3 - ADD DONATION");
         System.out.println(" 4 - QUIT");
+        System.out.println();
+        System.out.println("Command: ");
 
         Scanner keyboard = new Scanner(System.in);
         int response = keyboard.nextInt();
@@ -38,14 +45,14 @@ public class ConnectToDatabase {
         switch (response)
         {
             case 1: // Add donor
-                instance.AddDonor();
+                AddDonor();
                 break;
             case 4: // Quit
                 System.out.println("Bye!");
             default:
                 break;
         }
-    }//main
+    }
 
     public void AddDonor()
     {
@@ -103,6 +110,7 @@ public class ConnectToDatabase {
                 se.printStackTrace();
             }//end finally try
         }//end try
+        PresentMenu();
     }
 
 }//ConnectToDatabase
