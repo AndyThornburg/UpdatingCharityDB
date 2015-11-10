@@ -37,7 +37,7 @@ public class ConnectToDatabase {
         System.out.println(" 3 - ADD DONATION");
         System.out.println(" 4 - QUIT");
         System.out.println();
-        System.out.println("Command: ");
+        System.out.print("Command: ");
 
         Scanner keyboard = new Scanner(System.in);
         int response = keyboard.nextInt();
@@ -141,13 +141,75 @@ public class ConnectToDatabase {
     
     public void AddDonation() {
         Scanner keyboard = new Scanner(System.in);
+        int i = 0;
+        int j = 0;
+        int[] fNameIdList = new int[25];
+        int[] lNameIdList = new int[25];
         
-        System.out.print("Please enter in the donor's first name: ");
-        String firstName = keyboard.next();
-        System.out.print("Please enter in the donor's last name: ");
-        String lastName = keyboard.next();
-        System.out.print("Please enter in the matching company's name: ");
-        String company = keyboard.next();
+        while(i == 0) {
+            while (j == 0) {
+                System.out.print("Please enter in the donor's first name: ");
+                String firstName = keyboard.nextLine();
+                fNameIdList = checkExists("donors", "firstName", firstName);
+                if(fNameIdList[0] == -1){
+                    System.err.println("The first name " + firstName +
+                        " does not exist in the donors table. Please try again...");
+                } else {
+                    j = 1;
+                }
+            }
+            while (j == 1){
+                System.out.print("Please enter in the donor's last name: ");
+                String lastName = keyboard.nextLine();
+                lNameIdList = checkExists("donors", "lastName", lastName);
+                if(lNameIdList[0] == -1){
+                    System.err.println("The last name " + lastName +
+                        " does not exist in the donors table. Please try again...");
+                } else {
+                    j = 0;
+                }
+            }
+            for(int k = 0; k < fNameIdList.length; k++){
+                for(int l = 0; l < lNameIdList.length; l++){
+                    if((fNameIdList[k] == lNameIdList[l]) && fNameIdList[k] != -1) {
+                        i = 1;
+                    }
+                }
+            }
+            if (i == 0) {
+                System.err.println("The inputted combination of first and "
+                    + "last name does not exist in the donors table. Please try again...");
+            }
+        }
+        while (i == 1) {
+            System.out.print("Please enter in the matching company's name: ");
+            String company = keyboard.nextLine();
+            int[] companyIdList = checkExists("matchingCompanies", "name", company);
+            if(companyIdList[0] == -1){
+                System.err.println("The company name " + company +
+                    " does not exist in the matchingCompanies table. Please try again...");
+            } else {
+                i = 0;
+            }
+        }
+        
+    }
+    
+    /**
+     * This method is for checking to see whether or not a particular MYSQL table
+     * contains a tuple that matches the following criteria.
+     * @param table This is the name of the MYSQL table that is being searched.
+     * @param item This is the name of the MYSQL field that is being searched for.
+     * @param value This is the string that the fields are being compared to.
+     * @return Returns an array of int, contains all id values that meet desired
+     * criteria; default value set to be -1.
+     */
+    private int[] checkExists(String table, String item, String value) {
+        int[] idList = new int[25];
+        for(int i = 0; i < idList.length; i++){
+            idList[i] = -1;
+        }
+        int index = 0;
         
         Connection conn = null;
         Statement stmt = null;
@@ -156,21 +218,24 @@ public class ConnectToDatabase {
             Class.forName("com.mysql.jdbc.Driver");
 
             //STEP 3: Open a connection
-            System.out.println("Connecting to database...");
+            //System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
             conn.setAutoCommit(false);
             
-            
             //STEP 4: Execute a query
-            System.out.println("Creating statement...");
+            //System.out.println("Creating statement...");
             stmt = conn.createStatement();
             String sql;
-            sql = "LOCK TABLES donors WRITE";
-            stmt.executeQuery(sql);
-            sql = "SELECT * FROM donors";
+            sql = "SELECT * FROM " + table +
+                    " where " + item + " = '" + value + "'";
             ResultSet rs = stmt.executeQuery(sql);
-            sql = "UNLOCK TABLES";
-            stmt.executeQuery(sql);
+            
+            //STEP 5: Extract data from result set
+            while (rs.next()) {
+                //Retrieve by column name
+                idList[index] = rs.getInt(1);
+                index++;
+            }
             
             conn.commit();
             //STEP 6: Clean-up environment
@@ -199,6 +264,8 @@ public class ConnectToDatabase {
                 se.printStackTrace();
             }//end finally try
         }//end try
+        
+        return idList;
     }
 
 }//ConnectToDatabase
