@@ -47,6 +47,9 @@ public class ConnectToDatabase {
             case 1: // Add donor
                 AddDonor();
                 break;
+            case 3:
+                AddDonation();
+                break;
             case 4: // Quit
                 System.out.println("Bye!");
             default:
@@ -134,6 +137,68 @@ public class ConnectToDatabase {
             }//end finally try
         }//end try
         PresentMenu();
+    }
+    
+    public void AddDonation() {
+        Scanner keyboard = new Scanner(System.in);
+        
+        System.out.print("Please enter in the donor's first name: ");
+        String firstName = keyboard.next();
+        System.out.print("Please enter in the donor's last name: ");
+        String lastName = keyboard.next();
+        System.out.print("Please enter in the matching company's name: ");
+        String company = keyboard.next();
+        
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            //STEP 2: Register JDBC driver
+            Class.forName("com.mysql.jdbc.Driver");
+
+            //STEP 3: Open a connection
+            System.out.println("Connecting to database...");
+            conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            conn.setAutoCommit(false);
+            
+            
+            //STEP 4: Execute a query
+            System.out.println("Creating statement...");
+            stmt = conn.createStatement();
+            String sql;
+            sql = "LOCK TABLES donors WRITE";
+            stmt.executeQuery(sql);
+            sql = "SELECT * FROM donors";
+            ResultSet rs = stmt.executeQuery(sql);
+            sql = "UNLOCK TABLES";
+            stmt.executeQuery(sql);
+            
+            conn.commit();
+            //STEP 6: Clean-up environment
+            //rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException se) {
+            //Handle errors for JDBC
+            se.printStackTrace();
+        } catch (Exception e) {
+            //Handle errors for Class.forName
+            e.printStackTrace();
+        } finally {
+            //finally block used to close resources
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }// nothing we can do
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }//end finally try
+        }//end try
     }
 
 }//ConnectToDatabase
