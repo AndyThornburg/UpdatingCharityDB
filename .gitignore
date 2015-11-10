@@ -1,0 +1,8 @@
+build/
+dist/
+nbproject/private
+.jar
+.xml
+.txt
+.sql
+
