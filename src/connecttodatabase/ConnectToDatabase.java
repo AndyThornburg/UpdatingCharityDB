@@ -50,6 +50,8 @@ public class ConnectToDatabase {
             case 4: // Quit
                 System.out.println("Bye!");
             default:
+                System.out.println("Unrecognized option.");
+                PresentMenu();
                 break;
         }
     }
@@ -59,34 +61,55 @@ public class ConnectToDatabase {
         Scanner keyboard = new Scanner(System.in);
         System.out.println("First name:");
         String firstName = keyboard.next();
-
-        // Just to see
-        System.out.println(firstName);
+        System.out.println("Last name:");
+        String lastName = keyboard.next();
+        System.out.println("Address:");
+        String address = keyboard.next();
+        System.out.println("City:");
+        String city = keyboard.next();
+        System.out.println("State initials:");
+        String stateInitials = keyboard.next();
+        System.out.println("Zip code:");
+        String zipCode = keyboard.next();
 
         Connection conn = null;
         Statement stmt = null;
+        PreparedStatement pstmt = null;
+        int maxDonorID = 0;
         try {
-            //STEP 2: Register JDBC driver
             Class.forName("com.mysql.jdbc.Driver");
-
-            //STEP 3: Open a connection
-//            System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
 
-            //STEP 4: Execute a query
             stmt = conn.createStatement();
             String sql;
             sql = "SELECT MAX(donorID) as maxDonorID FROM donors";
             ResultSet rs = stmt.executeQuery(sql);
 
-            //STEP 5: Extract data from result set
             while (rs.next()) {
-                //Retrieve by column name
-                int maxDonorID = rs.getInt("maxDonorID");
+                maxDonorID = rs.getInt("maxDonorID");
             }
-            //STEP 6: Clean-up environment
+            
+            sql = "LOCK TABLES donors WRITE";
+            stmt.executeUpdate(sql);
+
+            String sqlInsert = "INSERT INTO donors (donorID,lastName,firstName,address,city,state,zip) VALUES (?,?,?,?,?,?)";
+            pstmt = conn.prepareStatement(sqlInsert,Statement.RETURN_GENERATED_KEYS);
+
+            pstmt.setInt(++maxDonorID, 1);
+            pstmt.setString(2, lastName);
+            pstmt.setString(3, firstName);
+            pstmt.setString(4, address);
+            pstmt.setString(5, city);
+            pstmt.setString(6, stateInitials);
+            pstmt.setString(7, zipCode);
+            pstmt.executeUpdate();
+
+            sql = "UNLOCK TABLES";
+            stmt.executeUpdate(sql);
+
             rs.close();
             stmt.close();
+            pstmt.close();
             conn.close();
         } catch (SQLException se) {
             //Handle errors for JDBC
