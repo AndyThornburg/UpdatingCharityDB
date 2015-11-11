@@ -139,14 +139,21 @@ public class ConnectToDatabase {
         PresentMenu();
     }
     
+    /**
+     * 
+     */
     public void AddDonation() {
         Scanner keyboard = new Scanner(System.in);
+        int donorId = 0;
         int i = 0;
         int j = 0;
-        int[] fNameIdList = new int[25];
-        int[] lNameIdList = new int[25];
         
+        // Loop used to repeat console query for donor's name (3 parts)
         while(i == 0) {
+            int[] fNameIdList = new int[25];
+            int[] lNameIdList = new int[25];
+            // PART 1) Loop asks user for donor's first name and checks donor table for
+            // the existance of a donor with such a name.
             while (j == 0) {
                 System.out.print("Please enter in the donor's first name: ");
                 String firstName = keyboard.nextLine();
@@ -158,6 +165,8 @@ public class ConnectToDatabase {
                     j = 1;
                 }
             }
+            // PART 2) Loop asks user for donor's last name and checks donor table for
+            // the existance of a donor with such a name.
             while (j == 1){
                 System.out.print("Please enter in the donor's last name: ");
                 String lastName = keyboard.nextLine();
@@ -169,10 +178,14 @@ public class ConnectToDatabase {
                     j = 0;
                 }
             }
+            // PART 3) Loop checks the id's recieved from part 1 and 2 to verify
+            // whether or not the first and last name match together on the same
+            // tuple.
             for(int k = 0; k < fNameIdList.length; k++){
                 for(int l = 0; l < lNameIdList.length; l++){
                     if((fNameIdList[k] == lNameIdList[l]) && fNameIdList[k] != -1) {
                         i = 1;
+                        donorId = fNameIdList[k];
                     }
                 }
             }
@@ -181,6 +194,9 @@ public class ConnectToDatabase {
                     + "last name does not exist in the donors table. Please try again...");
             }
         }
+        
+        // Loop repeats a console query and table lookup for a matching company
+        // name until lookup succeeds.
         while (i == 1) {
             System.out.print("Please enter in the matching company's name: ");
             String company = keyboard.nextLine();
@@ -193,11 +209,24 @@ public class ConnectToDatabase {
             }
         }
         
+        // Loop repeats a console query and conditional for a donation amount 
+        // checking until donation meets the criteria of being > 0.
+        while (i == 0) {
+            System.out.print("Please enter in the amount of the donation: ");
+            int amount = keyboard.nextInt();
+            if(amount <= 0){
+                System.err.println("The donation amount cannot be negative. Please try again...");
+            } else {
+                i = 1;
+            }
+        }
+        
+        
     }
     
     /**
      * This method is for checking to see whether or not a particular MYSQL table
-     * contains a tuple that matches the following criteria.
+     * contains a tuple that matches the following criteria. Author: Alec Nunez.
      * @param table This is the name of the MYSQL table that is being searched.
      * @param item This is the name of the MYSQL field that is being searched for.
      * @param value This is the string that the fields are being compared to.
