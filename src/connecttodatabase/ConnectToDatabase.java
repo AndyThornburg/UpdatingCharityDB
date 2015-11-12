@@ -140,11 +140,16 @@ public class ConnectToDatabase {
     }
     
     /**
-     * 
+     * This method completes the third programming assignment by querying the user
+     * for the donor's first and last name, company name and donation amount then
+     * invokes checkExists to determine the required information to write a new entry
+     * to the donations table. Author: Alec Nunez.
      */
     public void AddDonation() {
         Scanner keyboard = new Scanner(System.in);
-        int donorId = 0;
+        int donorID = 0;
+        int companyID = 0;
+        double amount = 0;
         int i = 0;
         int j = 0;
         
@@ -185,8 +190,10 @@ public class ConnectToDatabase {
                 for(int l = 0; l < lNameIdList.length; l++){
                     if((fNameIdList[k] == lNameIdList[l]) && fNameIdList[k] != -1) {
                         i = 1;
-                        donorId = fNameIdList[k];
-                    }
+                        donorID = fNameIdList[k];
+                    } else if(fNameIdList[k] == -1){    // This step terminates the loop after seeing a -1 in fNameIdList
+                        k = fNameIdList.length - 1;
+                    } 
                 }
             }
             if (i == 0) {
@@ -206,6 +213,7 @@ public class ConnectToDatabase {
                     " does not exist in the matchingCompanies table. Please try again...");
             } else {
                 i = 0;
+                companyID = companyIdList[0];
             }
         }
         
@@ -213,7 +221,7 @@ public class ConnectToDatabase {
         // checking until donation meets the criteria of being > 0.
         while (i == 0) {
             System.out.print("Please enter in the amount of the donation: ");
-            int amount = keyboard.nextInt();
+            amount = keyboard.nextDouble();
             if(amount <= 0){
                 System.err.println("The donation amount cannot be negative. Please try again...");
             } else {
@@ -221,11 +229,81 @@ public class ConnectToDatabase {
             }
         }
         
+        Connection conn = null;
+        Statement stmt = null;
+        Savepoint saveData = null;
         
+        try {
+            //STEP 2: Register JDBC driver
+            Class.forName("com.mysql.jdbc.Driver");
+
+            //STEP 3: Open a connection
+            conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            conn.setAutoCommit(false);
+            saveData = conn.setSavepoint();
+            
+            //STEP 4: Execute a query
+            stmt = conn.createStatement();
+            String sql;
+            sql = "LOCK TABLES donations WRITE";
+            stmt.executeQuery(sql);
+            sql = "SELECT MAX(donationNumber) AS max FROM donations";
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            //STEP 5: Extract data from result set
+            rs.next();
+            int donationNumber = rs.getInt("max");
+            donationNumber++;
+            
+            //STEP 6: Modify Table
+            sql = "INSERT INTO donations "
+                    + "VALUES(" + donationNumber + ", "
+                                + donorID + ", "
+                                + companyID + ", "
+                                + amount + ")";
+            stmt.execute(sql);
+            System.out.println("The following entry was entered into the donations table:");
+            System.out.println("(" + donationNumber + ", "
+                                + donorID + ", "
+                                + companyID + ", "
+                                + amount + ")");
+            
+            //STEP 7: Clean-up environment
+            sql = "UNLOCK TABLES";
+            stmt.executeQuery(sql);
+            conn.commit();
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException se) {
+            //Handle errors for JDBC
+            se.printStackTrace();
+        } catch (Exception e) {
+            //Handle errors for Class.forName
+            e.printStackTrace();
+        } finally {
+            //finally block used to close resources
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }// nothing we can do
+            try {
+                if (conn != null) {
+                    if(!conn.isClosed()) {
+                        conn.rollback(saveData);
+                    }
+                    conn.close();
+                }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }//end finally try
+        }//end try
     }
     
     /**
-     * This method is for checking to see whether or not a particular MYSQL table
+     * This helper method is for checking to see whether or not a particular MYSQL table
      * contains a tuple that matches the following criteria. Author: Alec Nunez.
      * @param table This is the name of the MYSQL table that is being searched.
      * @param item This is the name of the MYSQL field that is being searched for.
@@ -247,12 +325,10 @@ public class ConnectToDatabase {
             Class.forName("com.mysql.jdbc.Driver");
 
             //STEP 3: Open a connection
-            //System.out.println("Connecting to database...");
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
             conn.setAutoCommit(false);
             
             //STEP 4: Execute a query
-            //System.out.println("Creating statement...");
             stmt = conn.createStatement();
             String sql;
             sql = "SELECT * FROM " + table +
@@ -266,9 +342,9 @@ public class ConnectToDatabase {
                 index++;
             }
             
-            conn.commit();
             //STEP 6: Clean-up environment
-            //rs.close();
+            conn.commit();
+            rs.close();
             stmt.close();
             conn.close();
         } catch (SQLException se) {
