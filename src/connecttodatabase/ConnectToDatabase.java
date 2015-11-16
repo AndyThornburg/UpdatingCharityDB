@@ -45,6 +45,8 @@ public class ConnectToDatabase {
             case 1: // Add donor
                 AddDonor();
                 break;
+            case 2:
+                AddCompany();
             case 3:
                 AddDonation();
                 break;
@@ -147,6 +149,37 @@ public class ConnectToDatabase {
             }//end finally try
         }//end try
         PresentMenu();
+    }
+    public void AddCompany()
+    {
+        Scanner keyboard = new Scanner(System.in);
+        System.out.println("Company Name = ");
+        String companyName = keyboard.nextLine();
+        System.out.println("Address = ");
+        String address = keyboard.nextLine();
+        System.out.println("City = ");
+        String city = keyboard.nextLine();
+        System.out.println("State = ");
+        String State = keyboard.nextLine();
+        System.out.println("Zip = ");
+        String zip = keyboard.nextLine();
+        System.out.println("Max Percent = ");
+        String maxPercent = keyboard.nextLine();
+        System.out.println("Minimum Match = ");
+        String minMatch = keyboard.nextLine();
+        System.out.println("Maximum Match = ");
+        String maxMatch = keyboard.nextLine();
+        
+        Connection conn = null;
+        Statement stmt = null;
+        PreparedStatement pstmt = null;
+        int companyID = 0;
+        
+//        For add Company, prompt user for name, address, city, state, zip, 
+//                matchPercent(must be between 1% and 200%), minMatch(must be over 0), 
+//                maxMatch(max be at least 1)  If Company name is already on table do not add.  
+//                Assign an unused companyId
+        
     }
 
     /**
