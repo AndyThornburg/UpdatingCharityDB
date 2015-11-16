@@ -1,11 +1,9 @@
 package connecttodatabase;
 
-/**
- *
- * @author Marietta E. Cameron
- * Henry Henderson's copy
- * Reports on question 1.
- */
+/*
+* Updating Charity DB assignments
+* Authors: Henry Henderson, Andy Thornburg, Alec Nunez
+*/
 import java.sql.*;
 import java.util.Scanner;
 
@@ -23,12 +21,12 @@ public class ConnectToDatabase {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) 
+    public static void main(String[] args)
     {
         ConnectToDatabase instance = new ConnectToDatabase();
         instance.PresentMenu();
     }
-    
+
     public void PresentMenu()
     {
         System.out.println("Welcome to the donor database editor. Please type an option number below, followed by the Enter key.");
@@ -41,7 +39,7 @@ public class ConnectToDatabase {
 
         Scanner keyboard = new Scanner(System.in);
         int response = keyboard.nextInt();
-        
+
         switch (response)
         {
             case 1: // Add donor
@@ -59,46 +57,52 @@ public class ConnectToDatabase {
         }
     }
 
+    /**
+     * This method requests input from the user to add a new
+     * donor to the charity database. It returns the added results
+     * on the console when it successfully completes.
+     */
     public void AddDonor()
     {
         Scanner keyboard = new Scanner(System.in);
         System.out.println("First name:");
-        String firstName = keyboard.next();
+        String firstName = keyboard.nextLine();
         System.out.println("Last name:");
-        String lastName = keyboard.next();
+        String lastName = keyboard.nextLine();
         System.out.println("Address:");
-        String address = keyboard.next();
+        String address = keyboard.nextLine();
         System.out.println("City:");
-        String city = keyboard.next();
+        String city = keyboard.nextLine();
         System.out.println("State initials:");
-        String stateInitials = keyboard.next();
+        String stateInitials = keyboard.nextLine();
         System.out.println("Zip code:");
-        String zipCode = keyboard.next();
+        String zipCode = keyboard.nextLine();
+        System.out.println();
 
         Connection conn = null;
         Statement stmt = null;
         PreparedStatement pstmt = null;
         int maxDonorID = 0;
+
         try {
             Class.forName("com.mysql.jdbc.Driver");
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            conn.setAutoCommit(false);
 
             stmt = conn.createStatement();
             String sql;
+            sql = "LOCK TABLES donors WRITE";
+            stmt.executeQuery(sql);
             sql = "SELECT MAX(donorID) as maxDonorID FROM donors";
             ResultSet rs = stmt.executeQuery(sql);
 
-            while (rs.next()) {
+            while (rs.next())
                 maxDonorID = rs.getInt("maxDonorID");
-            }
-            
-            sql = "LOCK TABLES donors WRITE";
-            stmt.executeUpdate(sql);
 
-            String sqlInsert = "INSERT INTO donors (donorID,lastName,firstName,address,city,state,zip) VALUES (?,?,?,?,?,?)";
+            String sqlInsert = "INSERT INTO donors (donorID,lastName,firstName,address,city,state,zip) VALUES (?,?,?,?,?,?,?)";
             pstmt = conn.prepareStatement(sqlInsert,Statement.RETURN_GENERATED_KEYS);
 
-            pstmt.setInt(++maxDonorID, 1);
+            pstmt.setInt(1, ++maxDonorID);
             pstmt.setString(2, lastName);
             pstmt.setString(3, firstName);
             pstmt.setString(4, address);
@@ -107,9 +111,15 @@ public class ConnectToDatabase {
             pstmt.setString(7, zipCode);
             pstmt.executeUpdate();
 
+            System.out.println();
+            System.out.println("New donor added successfully:");
+            System.out.println(firstName + " " + lastName);
+            System.out.println(address);
+            System.out.println(city + ", " + stateInitials + " " + zipCode);
+            System.out.println();
+
             sql = "UNLOCK TABLES";
             stmt.executeUpdate(sql);
-
             rs.close();
             stmt.close();
             pstmt.close();
@@ -138,7 +148,7 @@ public class ConnectToDatabase {
         }//end try
         PresentMenu();
     }
-    
+
     /**
      * This method completes the third programming assignment by querying the user
      * for the donor's first and last name, company name and donation amount then
@@ -152,7 +162,7 @@ public class ConnectToDatabase {
         double amount = 0;
         int i = 0;
         int j = 0;
-        
+
         // Loop used to repeat console query for donor's name (3 parts)
         while(i == 0) {
             int[] fNameIdList = new int[25];
@@ -193,7 +203,7 @@ public class ConnectToDatabase {
                         donorID = fNameIdList[k];
                     } else if(fNameIdList[k] == -1){    // This step terminates the loop after seeing a -1 in fNameIdList
                         k = fNameIdList.length - 1;
-                    } 
+                    }
                 }
             }
             if (i == 0) {
@@ -201,7 +211,7 @@ public class ConnectToDatabase {
                     + "last name does not exist in the donors table. Please try again...");
             }
         }
-        
+
         // Loop repeats a console query and table lookup for a matching company
         // name until lookup succeeds.
         while (i == 1) {
@@ -216,8 +226,8 @@ public class ConnectToDatabase {
                 companyID = companyIdList[0];
             }
         }
-        
-        // Loop repeats a console query and conditional for a donation amount 
+
+        // Loop repeats a console query and conditional for a donation amount
         // checking until donation meets the criteria of being > 0.
         while (i == 0) {
             System.out.print("Please enter in the amount of the donation: ");
@@ -228,11 +238,11 @@ public class ConnectToDatabase {
                 i = 1;
             }
         }
-        
+
         Connection conn = null;
         Statement stmt = null;
         Savepoint saveData = null;
-        
+
         try {
             //STEP 2: Register JDBC driver
             Class.forName("com.mysql.jdbc.Driver");
@@ -241,7 +251,7 @@ public class ConnectToDatabase {
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
             conn.setAutoCommit(false);
             saveData = conn.setSavepoint();
-            
+
             //STEP 4: Execute a query
             stmt = conn.createStatement();
             String sql;
@@ -249,12 +259,12 @@ public class ConnectToDatabase {
             stmt.executeQuery(sql);
             sql = "SELECT MAX(donationNumber) AS max FROM donations";
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             //STEP 5: Extract data from result set
             rs.next();
             int donationNumber = rs.getInt("max");
             donationNumber++;
-            
+
             //STEP 6: Modify Table
             sql = "INSERT INTO donations "
                     + "VALUES(" + donationNumber + ", "
@@ -267,7 +277,7 @@ public class ConnectToDatabase {
                                 + donorID + ", "
                                 + companyID + ", "
                                 + amount + ")");
-            
+
             //STEP 7: Clean-up environment
             sql = "UNLOCK TABLES";
             stmt.executeQuery(sql);
@@ -301,7 +311,7 @@ public class ConnectToDatabase {
             }//end finally try
         }//end try
     }
-    
+
     /**
      * This helper method is for checking to see whether or not a particular MYSQL table
      * contains a tuple that matches the following criteria. Author: Alec Nunez.
@@ -317,7 +327,7 @@ public class ConnectToDatabase {
             idList[i] = -1;
         }
         int index = 0;
-        
+
         Connection conn = null;
         Statement stmt = null;
         try {
@@ -327,21 +337,21 @@ public class ConnectToDatabase {
             //STEP 3: Open a connection
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
             conn.setAutoCommit(false);
-            
+
             //STEP 4: Execute a query
             stmt = conn.createStatement();
             String sql;
             sql = "SELECT * FROM " + table +
                     " where " + item + " = '" + value + "'";
             ResultSet rs = stmt.executeQuery(sql);
-            
+
             //STEP 5: Extract data from result set
             while (rs.next()) {
                 //Retrieve by column name
                 idList[index] = rs.getInt(1);
                 index++;
             }
-            
+
             //STEP 6: Clean-up environment
             conn.commit();
             rs.close();
@@ -369,7 +379,7 @@ public class ConnectToDatabase {
                 se.printStackTrace();
             }//end finally try
         }//end try
-        
+
         return idList;
     }
 
