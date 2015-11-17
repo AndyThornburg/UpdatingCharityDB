@@ -6,6 +6,8 @@ package connecttodatabase;
 */
 import java.sql.*;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConnectToDatabase {
 
@@ -151,37 +153,89 @@ public class ConnectToDatabase {
         }//end try
         PresentMenu();
     }
+    
     public void AddCompany()
     {
         Scanner keyboard = new Scanner(System.in);
         System.out.println("Company Name = ");
-        String companyName = keyboard.nextLine();
+        String name = keyboard.nextLine();
         System.out.println("Address = ");
         String address = keyboard.nextLine();
         System.out.println("City = ");
         String city = keyboard.nextLine();
         System.out.println("State = ");
-        String State = keyboard.nextLine();
+        String state = keyboard.nextLine();
         System.out.println("Zip = ");
         String zip = keyboard.nextLine();
         System.out.println("Max Percent = ");
-        String maxPercent = keyboard.nextLine();
+        double maxPercent = keyboard.nextDouble();
         System.out.println("Minimum Match = ");
-        String minMatch = keyboard.nextLine();
+        double minMatch = keyboard.nextDouble();
         System.out.println("Maximum Match = ");
-        String maxMatch = keyboard.nextLine();
+        double maxMatch = keyboard.nextDouble();
         
         Connection conn = null;
         Statement stmt = null;
-        PreparedStatement pstmt = null;
-        int companyID = 0;
+        PreparedStatement cstmt = null;
+        int maxCompanyID = 0;
+        
+ try {
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            conn.setAutoCommit(false);
+
+            stmt = conn.createStatement();
+            String sql;
+            sql = "LOCK TABLES matchingCompanies WRITE";
+            stmt.executeQuery(sql);
+            sql = "SELECT MAX(companyID) as maxCompanyID FROM matchingCompanies";
+            ResultSet cs = stmt.executeQuery(sql);
+
+            while (cs.next())
+                maxCompanyID = cs.getInt("maxCompanyID");
+            
+            String Insert = "INSERT INTO matchingCompanies (companyID,name,address,city,state,zip,matchPercent,minMatch,maxMatch) VALUES (?,?,?,?,?,?,?,?,?)";
+            cstmt = conn.prepareStatement(Insert,Statement.RETURN_GENERATED_KEYS);
+
+            cstmt.setInt(1, ++maxCompanyID);
+            cstmt.setString(2, name);
+            cstmt.setString(3, address);
+            cstmt.setString(4, city);
+            cstmt.setString(5, state);
+            cstmt.setString(6, zip);
+            cstmt.setDouble(7, maxPercent);
+            cstmt.setDouble(8, minMatch);
+            cstmt.setDouble(9, maxMatch);
+            cstmt.executeUpdate();
+
+            System.out.println();
+            System.out.println("New company added successfully:");
+            System.out.println(address + " " + city);
+            System.out.println();
+            System.out.println(city + ", " + state + " " + zip);
+            System.out.println();
+            System.out.println("Max Percent = " + maxPercent);
+            System.out.println("Minimum Match = " + minMatch);
+            System.out.println("Max Match = " + maxMatch);
+            sql = "UNLOCK TABLES";
+            stmt.executeUpdate(sql);
+            cs.close();
+            stmt.close();
+            cstmt.close();
+            conn.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(ConnectToDatabase.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ConnectToDatabase.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+        PresentMenu();
+    }
         
 //        For add Company, prompt user for name, address, city, state, zip, 
 //                matchPercent(must be between 1% and 200%), minMatch(must be over 0), 
 //                maxMatch(max be at least 1)  If Company name is already on table do not add.  
 //                Assign an unused companyId
         
-    }
 
     /**
      * This method completes the third programming assignment by querying the user
