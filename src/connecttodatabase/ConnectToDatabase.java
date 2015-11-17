@@ -47,6 +47,7 @@ public class ConnectToDatabase {
                 break;
             case 2:
                 AddCompany();
+                break;
             case 3:
                 AddDonation();
                 break;
