@@ -153,7 +153,8 @@ public class ConnectToDatabase {
         }//end try
         PresentMenu();
     }
-    
+    //Part two addCompany() was done by Andy Thornburg
+    //The method takes input from the user and adds it to the matchingCompanies table of the database
     public void AddCompany()
     {
         Scanner keyboard = new Scanner(System.in);
